@@ -1,12 +1,10 @@
 package com.example.SpringProject.controller;
 
+import com.example.SpringProject.model.ApiResponse;
 import com.example.SpringProject.model.Category;
 import com.example.SpringProject.service.CategoryService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/category")
@@ -19,36 +17,28 @@ public class CategoryController {
     }
 
     @GetMapping("{category_id}")
-    public Category getCategoryDetails(@PathVariable("category_id") int category_id){
+    public ResponseEntity<ApiResponse<Object>> getCategoryDetails(@PathVariable("category_id") int category_id){
         return categoryService.getCategory(category_id);
     }
 
     @GetMapping()
-    public List<Category> getAllCategoryDetails(){
+    public ResponseEntity<ApiResponse<Object>> getAllCategoryDetails(){
         return categoryService.getAllCategories();
     }
 
     @PostMapping()
-    public ResponseEntity<String> createCategory(@RequestBody Category category){
-        if(categoryService.createCategory(category)){
-            return ResponseEntity.status(HttpStatus.CREATED).body("Category created successfully!");
-        }
-        return ResponseEntity.status(HttpStatus.ALREADY_REPORTED).body("Category already exist or some field is missing!");
+    public ResponseEntity<ApiResponse<Object>> createCategory(@RequestBody Category category){
+        return categoryService.createCategory(category);
+
     }
 
     @PutMapping("edit/{category_id}")
-    public ResponseEntity<String> updateCategoryDetails(@PathVariable("category_id") int category_id, @RequestBody Category category){
-        if(categoryService.updateCategory(category_id, category)){
-            return ResponseEntity.status(HttpStatus.OK).body("Category updated successfully.");
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("CategoryId does not exist or CategoryName already exist!");
+    public ResponseEntity<ApiResponse<Object>> updateCategoryDetails(@PathVariable("category_id") int category_id, @RequestBody Category category) {
+        return categoryService.updateCategory(category_id, category);
     }
 
     @DeleteMapping("{category_id}")
-    public ResponseEntity<String> deleteCategoryDetails(@PathVariable("category_id") int category_id){
-        if(categoryService.deleteCategory(category_id)){
-            return ResponseEntity.status(HttpStatus.OK).body("Category deleted successfully.");
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("CategoryId does not exist!");
+    public ResponseEntity<ApiResponse<Object>> deleteCategoryDetails(@PathVariable("category_id") int category_id) {
+        return categoryService.deleteCategory(category_id);
     }
 }

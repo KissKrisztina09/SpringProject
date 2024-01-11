@@ -1,9 +1,9 @@
 package com.example.SpringProject.service.impl;
 
+import com.example.SpringProject.model.ApiResponse;
 import com.example.SpringProject.model.Category;
 import com.example.SpringProject.repository.CategoryRepository;
 import com.example.SpringProject.service.CategoryService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,51 +20,79 @@ public class CategoryServiceImplement implements CategoryService {
     }
 
     @Override
-    public Boolean createCategory(Category category) {
+    public ResponseEntity<ApiResponse<Object>> createCategory(Category category) {
         if(!category.getCategory_name().isEmpty()){
             List<String> categoryNames = categoryRepository.findAll().stream().map(Category::getCategory_name).toList();
             if(!categoryNames.contains(category.getCategory_name())){
                 categoryRepository.save(category);
-                return true;
+                ApiResponse<Object> successResponse = new ApiResponse<>(true, "Category created successfully.", HttpStatus.OK.value(), category);
+                return ResponseEntity.status(HttpStatus.OK).body(successResponse);
             }else{
-                return false;
+                ApiResponse<Object> errorResponse = new ApiResponse<>(false, "The name already exist!",HttpStatus.BAD_REQUEST.value(), null);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
         }else{
-            return false;
+            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "The field is empty!",HttpStatus.BAD_REQUEST.value(), null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 
     @Override
-    public Boolean updateCategory(int categoryId, Category category) {
+    public ResponseEntity<ApiResponse<Object>> updateCategory(int categoryId, Category category) {
         Category existingCategory = categoryRepository.findById(categoryId).orElse(null);
-
-        if(!category.getCategory_name().isEmpty() && existingCategory!=null) {
-            existingCategory.setCategory_name(category.getCategory_name());
-            categoryRepository.save(existingCategory);
-            return true;
+        List<String> categoryNames = categoryRepository.findAll().stream().map(Category::getCategory_name).toList();
+        if(existingCategory==null ) {
+            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "There is no such category with the given ID!",HttpStatus.NOT_FOUND.value(), null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
-        return false;
+        if(!category.getCategory_name().isEmpty()) {
+                if(!categoryNames.contains(category.getCategory_name())){
+                    existingCategory.setCategory_name(category.getCategory_name());
+                    categoryRepository.save(existingCategory);
+                    ApiResponse<Object> successResponse = new ApiResponse<>(true, "Category updated successfully.", HttpStatus.OK.value(), existingCategory);
+                    return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+                }else{
+                    ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Category name already exists!", HttpStatus.BAD_REQUEST.value(), null);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+                }
+        }
+        ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Field is empty!",HttpStatus.BAD_REQUEST.value(), null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @Override
-    public Boolean deleteCategory(int category_id) {
-        if(categoryRepository.findById(category_id).orElse(null) == null){
-            return false;
+    public ResponseEntity<ApiResponse<Object>> deleteCategory(int category_id) {
+        if (categoryRepository.findById(category_id).isEmpty()) {
+            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Category_id does not exist!", HttpStatus.NOT_FOUND.value(), null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
+
         categoryRepository.deleteById(category_id);
-        return true;
+        ApiResponse<Object> successResponse = new ApiResponse<>(true, "Category deleted successfully.", HttpStatus.OK.value(), null);
+        return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+    }
+
+
+    @Override
+    public ResponseEntity<ApiResponse<Object>> getCategory(int category_id) {
+        Category existingCategory = categoryRepository.findById(category_id).orElse(null);
+
+        if(existingCategory==null ) {
+            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "There is no such category with the given ID!",HttpStatus.NOT_FOUND.value(), null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+
+        ApiResponse<Object> successResponse = new ApiResponse<>(true, "Success!", HttpStatus.OK.value(), existingCategory);
+        return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+
     }
 
     @Override
-    public Category getCategory(int category_id) {
-        return categoryRepository.findById(category_id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + category_id));
+    public ResponseEntity<ApiResponse<Object>> getAllCategories() {
+        List<Category> categoryList = categoryRepository.findAll();
 
-    }
-
-    @Override
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        ApiResponse<Object> successResponse = new ApiResponse<>(true, "Success!", HttpStatus.OK.value(), categoryList);
+        return ResponseEntity.status(HttpStatus.OK).body(successResponse);
     }
 
 }
