@@ -1,7 +1,5 @@
 package com.example.SpringProject.controller;
 
-
-import com.example.SpringProject.model.ApiResponse;
 import com.example.SpringProject.model.Product;
 import com.example.SpringProject.service.ProductService;
 import org.springframework.http.ResponseEntity;
@@ -17,34 +15,34 @@ public class ProductController {
     }
 
     @GetMapping("{product_id}")
-    public ResponseEntity<ApiResponse<Object>> getProductDetails(@PathVariable("product_id") int product_id){
+    public ResponseEntity<Object> getProductDetails(@PathVariable("product_id") int product_id){
         return productService.getProduct(product_id);
     }
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<Object>> getAllProductDetails(){
+    public ResponseEntity<Object> getAllProductDetails(){
         return productService.getAllProducts();
     }
 
     @PostMapping()
-    public ResponseEntity<ApiResponse<Object>>createProduct(@RequestBody Product product){
+    public ResponseEntity<Object>createProduct(@RequestBody Product product){
         return productService.createProduct(product);
 
     }
 
     @PutMapping("{product_id}")
-    public ResponseEntity<ApiResponse<Object>> updateProductDetails(@PathVariable("product_id") int product_id, @RequestBody Product product){
+    public ResponseEntity<Object> updateProductDetails(@PathVariable("product_id") int product_id, @RequestBody Product product){
         return productService.updateProduct(product_id, product);
 
     }
 
     @DeleteMapping("{product_id}")
-    public ResponseEntity<ApiResponse<Object>> deleteProductDetails(@PathVariable("product_id") int product_id){
+    public ResponseEntity<Object> deleteProductDetails(@PathVariable("product_id") int product_id){
         return productService.deleteProduct(product_id);
     }
 
     @GetMapping("byCategory/{category_id}")
-    public ResponseEntity<ApiResponse<Object>> getAllProductsByCategoryId(@PathVariable int category_id) {
+    public ResponseEntity<Object> getAllProductsByCategoryId(@PathVariable int category_id) {
         return productService.getAllProductsByCategoryId(category_id);
     }
 

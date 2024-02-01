@@ -1,6 +1,5 @@
 package com.example.SpringProject.service.impl;
 
-import com.example.SpringProject.model.ApiResponse;
 import com.example.SpringProject.model.Category;
 import com.example.SpringProject.model.Product;
 import com.example.SpringProject.repository.CategoryRepository;
@@ -26,41 +25,35 @@ public class ProductServiceImplement implements ProductService {
 
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> createProduct(Product product) {
+    public ResponseEntity<Object> createProduct(Product product) {
         if (product != null && !product.getProduct_name().isEmpty() && !product.getDescription().isEmpty() && product.getPrice() >= 0 && product.getQuantity() >= 0 && product.getCategoryId() >=0) {
             List<Integer> categoryId = categoryRepository.findAll().stream().map(Category::getCategory_id).toList();
             List<String> ProductNames = productRepository.findByCategoryId(product.getCategoryId()).stream().map(Product::getProduct_name).toList();
             if(ProductNames.contains(product.getProduct_name())){
-                ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Product name already exist!",HttpStatus.BAD_REQUEST.value(), null);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product name already exist!");
             }
             if (categoryId.contains(product.getCategoryId())) {
                 productRepository.save(product);
-                ApiResponse<Object> successResponse = new ApiResponse<>(true, "Product created successfully!", HttpStatus.OK.value(), product);
-                return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+                return ResponseEntity.status(HttpStatus.OK).body("Product created successfully!");
             }
-            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Category ID does not exist!",HttpStatus.NOT_FOUND.value(), null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Category ID does not exist!");
         }else{
-            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Some field is empty!",HttpStatus.BAD_REQUEST.value(), null);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Some field is empty!");
         }
 
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> updateProduct(int productId, Product product) {
+    public ResponseEntity<Object> updateProduct(int productId, Product product) {
         Product existingProduct = productRepository.findById(productId).orElse(null);
         if (existingProduct == null) {
-            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Product ID does not exist!", HttpStatus.NOT_FOUND.value(), null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product ID does not exist!");
         }else {
             if (product != null && !product.getProduct_name().isEmpty() && !product.getDescription().isEmpty() && product.getPrice() >= 0 && product.getQuantity() >= 0 && product.getCategoryId() > 0) {
                 List<Integer> categoryId = categoryRepository.findAll().stream().map(Category::getCategory_id).toList();
                 List<String> ProductNames = productRepository.findByCategoryId(product.getProduct_id()).stream().map(Product::getProduct_name).toList();
                 if (ProductNames.contains(product.getProduct_name())) {
-                    ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Product name already exist!", HttpStatus.BAD_REQUEST.value(), null);
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product name already exist!");
                 }
                 if (categoryId.contains(product.getCategoryId())) {
                     existingProduct.setProduct_name(product.getProduct_name());
@@ -70,53 +63,42 @@ public class ProductServiceImplement implements ProductService {
                     existingProduct.setPrice(product.getPrice());
 
                     productRepository.save(existingProduct);
-                    ApiResponse<Object> successResponse = new ApiResponse<>(true, "Product updated successfully!", HttpStatus.OK.value(), product);
-                    return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+                    return ResponseEntity.status(HttpStatus.OK).body("Product updated successfully!");
                 }
             }
-            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Some field is empty!", HttpStatus.BAD_REQUEST.value(), null);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Some field is empty!");
         }
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> deleteProduct(int product_id) {
+    public ResponseEntity<Object> deleteProduct(int product_id) {
         Product product = productRepository.findById(product_id).orElse(null);
         if(product == null){
-            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "Product Id does not exist!", HttpStatus.BAD_REQUEST.value(), null);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product Id does not exist!");
         }
         categoryRepository.deleteById(product_id);
-        ApiResponse<Object> successResponse = new ApiResponse<>(true, "Product deleted successfully!", HttpStatus.OK.value(), null);
-        return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+        return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfully!");
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> getProduct(int product_id) {
+    public ResponseEntity<Object> getProduct(int product_id) {
         Product existingProduct = productRepository.findById(product_id).orElse(null);
 
         if(existingProduct==null){
-            ApiResponse<Object> errorResponse = new ApiResponse<>(false, "There is no such product with the given ID!",HttpStatus.NOT_FOUND.value(), null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("There is no such product with the given ID!");
         }
-
-        ApiResponse<Object> successResponse = new ApiResponse<>(true, "Success!", HttpStatus.OK.value(), existingProduct);
-        return ResponseEntity.status(HttpStatus.OK).body(successResponse);
-
+        return ResponseEntity.status(HttpStatus.OK).body(existingProduct);
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> getAllProducts() {
+    public ResponseEntity<Object> getAllProducts() {
         List<Product> productList = productRepository.findAll();
-
-        ApiResponse<Object> successResponse = new ApiResponse<>(true, "Success!", HttpStatus.OK.value(), productList);
-        return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+        return ResponseEntity.status(HttpStatus.OK).body("Success!");
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> getAllProductsByCategoryId(int category_id) {
+    public ResponseEntity<Object> getAllProductsByCategoryId(int category_id) {
         List<Product> productList = productRepository.findByCategoryId(category_id);
-        ApiResponse<Object> successResponse = new ApiResponse<>(true, "Success!", HttpStatus.OK.value(), productList);
-        return ResponseEntity.status(HttpStatus.OK).body(successResponse);
+        return ResponseEntity.status(HttpStatus.OK).body("Success!");
     }
 }
