@@ -1,83 +1,88 @@
 package com.example.SpringProject.service.impl;
 
+import com.example.SpringProject.DAO.CategoryDAO;
 import com.example.SpringProject.model.Category;
-import com.example.SpringProject.repository.CategoryRepository;
 import com.example.SpringProject.service.CategoryService;
+import java.util.List;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
 public class CategoryServiceImplement implements CategoryService {
 
-    CategoryRepository categoryRepository;
+    CategoryDAO categoryDAO;
 
-    public CategoryServiceImplement(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    public CategoryServiceImplement(CategoryDAO categoryDAO){
+        this.categoryDAO = categoryDAO;
     }
 
-    @Override
-    public ResponseEntity<Object> createCategory(Category category) {
-        if(!category.getCategory_name().isEmpty()){
-            List<String> categoryNames = categoryRepository.findAll().stream().map(Category::getCategory_name).toList();
-            if(!categoryNames.contains(category.getCategory_name())){
-                categoryRepository.save(category);
-                return ResponseEntity.status(HttpStatus.OK).body("Category created successfully.");
-            }else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The name already exist!");
+
+    //@PostMapping("/insert")
+    public ResponseEntity<Object> createCategory(@RequestBody Category category) {
+        try {
+            categoryDAO.insertCategory(category);
+            return new ResponseEntity<>("Category created successfully", HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (DataAccessException e) {
+            return new ResponseEntity<>("Failed to create category: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+
+  // @GetMapping("/{categoryId}")
+    public ResponseEntity<Object> selectCategory(@PathVariable int categoryId) {
+        try {
+            Category category = categoryDAO.selectCategory(categoryId);
+            if (category != null) {
+                return new ResponseEntity<>(category, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Category not found with ID: " + categoryId, HttpStatus.NOT_FOUND);
             }
-        }else{
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The field is empty!");
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to select category: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @Override
+    //@PutMapping("/update/{categoryId}")
     public ResponseEntity<Object> updateCategory(int categoryId, Category category) {
-        Category existingCategory = categoryRepository.findById(categoryId).orElse(null);
-        List<String> categoryNames = categoryRepository.findAll().stream().map(Category::getCategory_name).toList();
-        if(existingCategory==null ) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("There is no such category with the given ID!");
+        try {
+            categoryDAO.updateCategory(categoryId, category);
+            return new ResponseEntity<>("Category created successfully", HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (DataAccessException e) {
+            return new ResponseEntity<>("Failed to update category: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if(!category.getCategory_name().isEmpty()) {
-                if(!categoryNames.contains(category.getCategory_name())){
-                    existingCategory.setCategory_name(category.getCategory_name());
-                    categoryRepository.save(existingCategory);
-                    return ResponseEntity.status(HttpStatus.OK).body("Category updated successfully.");
-                }else{
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Category name already exists!");
-                }
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Field is empty!");
     }
 
-    @Override
-    public ResponseEntity<Object> deleteCategory(int category_id) {
-        if (categoryRepository.findById(category_id).isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Category_id does not exist!");
+   // @DeleteMapping("/delete/{categoryId}")
+    public ResponseEntity<Object> deleteCategory(int categoryId) {
+        try{
+            categoryDAO.deleteCategory(categoryId);
+            return new ResponseEntity<>("Category deleted successfully!", HttpStatus.OK);
+        }catch (DataAccessException e) {
+            return new ResponseEntity<>("Failed to delete category: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        categoryRepository.deleteById(category_id);
-        return ResponseEntity.status(HttpStatus.OK).body("Category deleted successfully.");
-    }
-
-
-    @Override
-    public ResponseEntity<Object> getCategory(int category_id) {
-        Category existingCategory = categoryRepository.findById(category_id).orElse(null);
-
-        if(existingCategory==null ) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("There is no such category with the given ID!");
-        }
-        return ResponseEntity.status(HttpStatus.OK).body("Success!");
 
     }
 
-    @Override
+    //@GetMapping()
     public ResponseEntity<Object> getAllCategories() {
-        List<Category> categoryList = categoryRepository.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body("Success!");
+        try {
+            List<Category> categories = categoryDAO.selectAllCategories();
+            if (!categories.isEmpty()) {
+                return new ResponseEntity<>(categories, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("No categories found", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to retrieve categories: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-
+    
 }

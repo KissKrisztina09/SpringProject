@@ -9,35 +9,35 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/category")
 public class CategoryController {
 
-    CategoryService categoryService;
+    private final CategoryService categoryService;
 
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
-    @GetMapping("{category_id}")
-    public ResponseEntity<Object> getCategoryDetails(@PathVariable("category_id") int category_id){
-        return categoryService.getCategory(category_id);
+    @PostMapping("/insert")
+    public ResponseEntity<Object> createCategory(@RequestBody Category category) {
+        return categoryService.createCategory(category);
+    }
+    
+    @GetMapping("/{category_id}")
+    public ResponseEntity<Object> getCategoryDetails(@PathVariable("category_id") int categoryId){
+        return categoryService.selectCategory(categoryId);
     }
 
     @GetMapping()
-    public ResponseEntity<Object> getAllCategoryDetails(){
-        return categoryService.getAllCategories();
+    public ResponseEntity<Object> getAllCategories(){
+       return categoryService.getAllCategories();
     }
 
-    @PostMapping()
-    public ResponseEntity<Object> createCategory(@RequestBody Category category){
-        return categoryService.createCategory(category);
 
+    @PutMapping("update/{category_id}")
+    public ResponseEntity<Object> updateCategoryDetails(@PathVariable("category_id") int categoryId, @RequestBody Category category) {
+       return categoryService.updateCategory(categoryId, category);
     }
 
-    @PutMapping("edit/{category_id}")
-    public ResponseEntity<Object> updateCategoryDetails(@PathVariable("category_id") int category_id, @RequestBody Category category) {
-        return categoryService.updateCategory(category_id, category);
-    }
-
-    @DeleteMapping("{category_id}")
-    public ResponseEntity<Object> deleteCategoryDetails(@PathVariable("category_id") int category_id) {
-        return categoryService.deleteCategory(category_id);
+    @DeleteMapping("/delete/{category_id}")
+    public ResponseEntity<Object> deleteCategoryDetails(@PathVariable("category_id") int categoryId) {
+        return categoryService.deleteCategory(categoryId);
     }
 }

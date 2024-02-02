@@ -9,5 +9,5 @@ public interface ProductService {
     ResponseEntity<Object> deleteProduct(int product_id);
     ResponseEntity<Object> getProduct(int product_id);
     ResponseEntity<Object> getAllProducts();
-    ResponseEntity<Object> getAllProductsByCategoryId(int category_id);
+    ResponseEntity<Object> getProductsByCategoryId(int category_id);
 }

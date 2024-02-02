@@ -1,104 +1,100 @@
 package com.example.SpringProject.service.impl;
 
-import com.example.SpringProject.model.Category;
+import com.example.SpringProject.DAO.ProductDAO;
+import com.example.SpringProject.model.JoinTables;
 import com.example.SpringProject.model.Product;
-import com.example.SpringProject.repository.CategoryRepository;
-import com.example.SpringProject.repository.ProductRepository;
 import com.example.SpringProject.service.ProductService;
+import java.util.List;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 
 @Service
 public class ProductServiceImplement implements ProductService {
-    ProductRepository productRepository;
-    CategoryRepository categoryRepository;
+    ProductDAO productDAO;
 
-    public ProductServiceImplement(ProductRepository productRepository, CategoryRepository categoryRepository) {
-        this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
+    public ProductServiceImplement(ProductDAO productDAO){
+        this.productDAO = productDAO;
     }
 
-
+    public ResponseEntity<Object> getProductsByCategoryId(int category_id) {
+        try {
+            List<JoinTables> productsById = productDAO.getProductsByCategoryId(category_id);
+            if (!productsById.isEmpty()) {
+                return new ResponseEntity<>(productsById, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("No products found", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to retrieve products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        
+    }
 
     @Override
     public ResponseEntity<Object> createProduct(Product product) {
-        if (product != null && !product.getProduct_name().isEmpty() && !product.getDescription().isEmpty() && product.getPrice() >= 0 && product.getQuantity() >= 0 && product.getCategoryId() >=0) {
-            List<Integer> categoryId = categoryRepository.findAll().stream().map(Category::getCategory_id).toList();
-            List<String> ProductNames = productRepository.findByCategoryId(product.getCategoryId()).stream().map(Product::getProduct_name).toList();
-            if(ProductNames.contains(product.getProduct_name())){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product name already exist!");
-            }
-            if (categoryId.contains(product.getCategoryId())) {
-                productRepository.save(product);
-                return ResponseEntity.status(HttpStatus.OK).body("Product created successfully!");
-            }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Category ID does not exist!");
-        }else{
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Some field is empty!");
+       try {
+            productDAO.insertProduct(product);
+            return new ResponseEntity<>("Product created successfully", HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (DataAccessException e) {
+            return new ResponseEntity<>("Failed to create product: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
     }
 
     @Override
     public ResponseEntity<Object> updateProduct(int productId, Product product) {
-        Product existingProduct = productRepository.findById(productId).orElse(null);
-        if (existingProduct == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product ID does not exist!");
-        }else {
-            if (product != null && !product.getProduct_name().isEmpty() && !product.getDescription().isEmpty() && product.getPrice() >= 0 && product.getQuantity() >= 0 && product.getCategoryId() > 0) {
-                List<Integer> categoryId = categoryRepository.findAll().stream().map(Category::getCategory_id).toList();
-                List<String> ProductNames = productRepository.findByCategoryId(product.getProduct_id()).stream().map(Product::getProduct_name).toList();
-                if (ProductNames.contains(product.getProduct_name())) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product name already exist!");
-                }
-                if (categoryId.contains(product.getCategoryId())) {
-                    existingProduct.setProduct_name(product.getProduct_name());
-                    existingProduct.setDescription(product.getDescription());
-                    existingProduct.setCategoryId(product.getCategoryId());
-                    existingProduct.setQuantity(product.getQuantity());
-                    existingProduct.setPrice(product.getPrice());
-
-                    productRepository.save(existingProduct);
-                    return ResponseEntity.status(HttpStatus.OK).body("Product updated successfully!");
-                }
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Some field is empty!");
+        try {
+            productDAO.updateProduct(productId, product);
+            return new ResponseEntity<>("Product updated successfully", HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (DataAccessException e) {
+            return new ResponseEntity<>("Failed to update product: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
     public ResponseEntity<Object> deleteProduct(int product_id) {
-        Product product = productRepository.findById(product_id).orElse(null);
-        if(product == null){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product Id does not exist!");
+        try{
+            productDAO.deleteProduct(product_id);
+            return new ResponseEntity<>("Product deleted successfully", HttpStatus.OK);
+        }catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (DataAccessException e) {
+            return new ResponseEntity<>("Failed to delete product: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        categoryRepository.deleteById(product_id);
-        return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfully!");
     }
 
     @Override
     public ResponseEntity<Object> getProduct(int product_id) {
-        Product existingProduct = productRepository.findById(product_id).orElse(null);
-
-        if(existingProduct==null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("There is no such product with the given ID!");
+        try {
+            Product product = productDAO.selectProduct(product_id);
+            if (product != null) {
+                return new ResponseEntity<>(product, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Product not found with ID: " + product_id, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to select product: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(existingProduct);
     }
 
     @Override
     public ResponseEntity<Object> getAllProducts() {
-        List<Product> productList = productRepository.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body("Success!");
+         try {
+            List<Product> products = productDAO.selectAllProducts();
+            if (!products.isEmpty()) {
+                return new ResponseEntity<>(products, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("No products found", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to retrieve products: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @Override
-    public ResponseEntity<Object> getAllProductsByCategoryId(int category_id) {
-        List<Product> productList = productRepository.findByCategoryId(category_id);
-        return ResponseEntity.status(HttpStatus.OK).body("Success!");
-    }
 }
